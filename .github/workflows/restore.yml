@@ -91,3 +91,5 @@ jobs:
           git commit -m 'Restore sanitized public repository'
           TARGET="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
           git push origin HEAD:"$TARGET"
+
+# observable PR trigger
