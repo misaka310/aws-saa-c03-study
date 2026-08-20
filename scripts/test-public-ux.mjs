@@ -31,8 +31,8 @@ test('公開ポータルはファーストビューから教材と問題演習�
   assert.match(portal, /非公式教材/);
 });
 
-test('公開ポータルのソースに配信基盤の一時コードを混入させない', () => {
-  assert.doesNotMatch(portal, /cdn-cgi|__CF\$cv\$params|challenge-platform/i);
+test('公開HTMLのソースに配信基盤の一時コードを混入させない', () => {
+  assert.doesNotMatch(portal + quiz, /cdn-cgi|__CF\$cv\$params|challenge-platform/i);
 });
 
 test('初回の問題演習は全問題モードから始める', () => {
