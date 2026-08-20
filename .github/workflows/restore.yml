@@ -5,16 +5,23 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/restore.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore.yml'
 
 permissions:
   contents: write
 
 jobs:
   restore:
+    if: github.event_name == 'push' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - name: Verify public Site and restore repository
         shell: bash
         run: |
@@ -77,10 +84,10 @@ jobs:
           node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs
 
           rm -rf dist .restore
-          rm -f .github/workflows/restore.yml
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Restore sanitized public repository'
-          git push
+          TARGET="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          git push origin HEAD:"$TARGET"
