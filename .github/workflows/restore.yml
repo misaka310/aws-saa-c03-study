@@ -1,0 +1,86 @@
+name: Restore sanitized public repository
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify public Site and restore repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          SITE='https://aws-saa-c03-study.misaka310.chatgpt.site'
+
+          curl --fail --location --silent --show-error --retry 3 "$SITE/" -o /tmp/site-index.html
+          grep -qi 'AWS SAA-C03' /tmp/site-index.html
+
+          cat .restore/core-* | base64 --decode > /tmp/core.tar.bz2
+          tar -xjf /tmp/core.tar.bz2 -C .
+
+          mkdir -p quiz sites/portal images
+
+          for file in index.html styles.css app.js; do
+            curl --fail --location --silent --show-error --retry 3 "$SITE/$file" -o "sites/portal/$file"
+          done
+
+          for file in README.md backup.js choice-reasons.js glossary.js index.html learning-state.js questions.js test_backup.mjs test_quiz.mjs; do
+            curl --fail --location --silent --show-error --retry 3 "$SITE/quiz/$file" -o "quiz/$file"
+          done
+
+          for file in \
+            compute-selection.jpg \
+            cost-optimization.jpg \
+            database-selection.jpg \
+            decoupling-selection.jpg \
+            domain-cost-ja.png \
+            domain-performance-ja.png \
+            domain-resilient-ja.png \
+            domain-secure-ja.png \
+            dr-strategy.jpg \
+            encryption-secrets-selection-ja.png \
+            global-delivery-selection-ja.png \
+            iam-policy-evaluation.jpg \
+            multi-az-vs-read-replica-ja.png \
+            nat-vs-vpc-endpoint-ja.png \
+            s3-storage-class-selection-ja.png \
+            sg-vs-nacl-ja.png \
+            storage-selection.jpg \
+            three-tier-vpc.jpg \
+            vpc-connectivity-selection-ja.png; do
+            curl --fail --location --silent --show-error --retry 3 "$SITE/images/$file" -o "images/$file"
+          done
+
+          grep -q 'window.SAA_QUESTIONS' quiz/questions.js
+          grep -qi '<!doctype html>' sites/portal/index.html
+
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('images').iterdir():
+              data = path.read_bytes()
+              if path.suffix.lower() == '.png':
+                  assert data.startswith(b'\x89PNG\r\n\x1a\n'), f'not PNG: {path}'
+              elif path.suffix.lower() in {'.jpg', '.jpeg'}:
+                  assert data.startswith(b'\xff\xd8\xff'), f'not JPEG: {path}'
+          PY
+
+          node scripts/build-sites.mjs
+          node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs
+
+          rm -rf dist .restore
+          rm -f .github/workflows/restore.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Restore sanitized public repository'
+          git push
