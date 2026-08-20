@@ -40,7 +40,8 @@ test('初回の問題演習は全問題モードから始める', () => {
   assert.ok(quiz.indexOf('data-mode="all">全問題') < quiz.indexOf('data-mode="exam">65問模試'));
 });
 
-test('Site更新スクリプトは公開・非公開を決めつけない中立な表記にする', () => {
+test('Site更新スクリプトは公開状態とCIの検証内容に整合する', () => {
   assert.doesNotMatch(updateSite, /Private Site deployment/);
   assert.match(updateSite, /Site deployment/);
+  assert.match(updateSite, /scripts\/test-public-ux\.mjs/);
 });
