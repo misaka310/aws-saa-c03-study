@@ -27,4 +27,4 @@ jobs:
       - name: Build Sites
         run: node scripts/build-sites.mjs
       - name: Verify repository
-        run: node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs
+        run: node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs scripts/test-public-ux.mjs
