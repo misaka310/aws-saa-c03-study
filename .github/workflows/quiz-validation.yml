@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: repository-validation-${{ github.event.pull_request.number || github.ref }}
@@ -28,22 +28,3 @@ jobs:
         run: node scripts/build-sites.mjs
       - name: Verify repository
         run: node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs scripts/test-public-ux.mjs
-
-  apply-public-ux:
-    name: Apply approved public UX cleanup
-    if: github.event_name == 'pull_request' && github.head_ref == 'ux-public-entry' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-      - name: Apply source changes
-        run: python3 scripts/apply-public-ux.py
-      - name: Commit source changes
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add README.md sites/portal/index.html sites/portal/styles.css quiz/index.html scripts/update-site.ps1
-          git commit -m 'Improve public learning entry UX'
-          git push origin HEAD:${{ github.head_ref }}
