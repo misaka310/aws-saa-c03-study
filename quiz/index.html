@@ -91,8 +91,8 @@
 <div class="layout">
   <aside>
     <h2 class="side-title">モード</h2>
-    <button class="nav-button active" data-mode="exam">65問模試</button>
-    <button class="nav-button" data-mode="all">全問題</button>
+    <button class="nav-button active" data-mode="all">全問題</button>
+    <button class="nav-button" data-mode="exam">65問模試</button>
     <button class="nav-button" data-mode="new">新着問題</button>
     <button class="nav-button" data-mode="unanswered">未回答だけ</button>
     <button class="nav-button" data-mode="wrong">間違いだけ</button>
@@ -115,9 +115,9 @@
     <div class="notice">PCとスマホの成績は別々に保存されます。端末を移るときはJSONを書き出して、移動先で復元してください。</div>
   </aside>
   <main>
-    <div class="orange-title" id="quizTitle">65問模試</div>
+    <div class="orange-title" id="quizTitle">全問題</div>
     <section class="card">
-      <div class="meta-row"><span class="pill" id="domainPill">Exam</span><span class="pill" id="batchPill" hidden></span><span class="pill" id="counterPill">1 / 65</span><span class="pill" id="selectPill">1つ選択</span><span class="pill" id="timerPill">130:00</span></div>
+      <div class="meta-row"><span class="pill" id="domainPill">Practice</span><span class="pill" id="batchPill" hidden></span><span class="pill" id="counterPill">1 / 105</span><span class="pill" id="selectPill">1つ選択</span><span class="pill" id="timerPill">練習</span></div>
       <div class="progress"><div id="progressBar"></div></div>
       <div class="question-title" id="questionText"></div>
       <div class="choices" id="choices"></div>
@@ -153,7 +153,7 @@ const storeKey = "saa-c03-study-results-v2";
 const stateKey = "saa-c03-study-state-v3";
 let results = LEARNING.normalizeResults(JSON.parse(localStorage.getItem(storeKey) || "{}"));
 localStorage.setItem(storeKey, JSON.stringify(results));
-let state = { mode: "exam", order: [], index: 0, domain: null, start: Date.now(), duration: 130 * 60 * 1000 };
+let state = { mode: "all", order: [], index: 0, domain: null, start: Date.now(), duration: 130 * 60 * 1000 };
 const el = {
   nav: [...document.querySelectorAll("[data-mode]")], domains: [...document.querySelectorAll("[data-domain]")], title: quizTitle,
   domainPill, batchPill, counterPill, selectPill, timerPill, bar: progressBar, q: questionText, choices,
@@ -334,7 +334,7 @@ el.prevBtn.onclick = () => { state.index--; render(); };
 el.nextBtn.onclick = () => { state.index++; render(); };
 shuffleBtn.onclick = () => { state.order = state.order.sort(() => Math.random() - .5); state.index = firstUnansweredIndex(currentSet()); saveState(); render(); };
 newExamBtn.onclick = () => setMode("exam");
-resetBtn.onclick = () => { if (confirm("成績をリセットしますか？")) { results = {}; localStorage.removeItem(storeKey); localStorage.removeItem(stateKey); setMode("exam"); } };
+resetBtn.onclick = () => { if (confirm("成績をリセットしますか？")) { results = {}; localStorage.removeItem(storeKey); localStorage.removeItem(stateKey); setMode("all"); } };
 exportBackupBtn.onclick = exportBackup;
 importBackupInput.onchange = async event => {
   const file = event.target.files?.[0];
@@ -348,5 +348,5 @@ el.domains.forEach(b => b.onclick = () => setDomain(b.dataset.domain));
 setInterval(tick, 1000);
 restoreOrStart();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e091204a93b2b6',t:'MTc4NzIyMDE5Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

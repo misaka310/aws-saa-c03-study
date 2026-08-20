@@ -31,7 +31,7 @@ $Node = Resolve-Tool -Candidates @("node.exe", "C:\Program Files\nodejs\node.exe
 Push-Location $Root
 try {
     Invoke-Native -FilePath $Node -Arguments @("scripts/build-sites.mjs") -Label "Sites build"
-    Invoke-Native -FilePath $Node -Arguments @("--test", "quiz/test_quiz.mjs", "quiz/test_backup.mjs", "scripts/test-sites.mjs") -Label "Repository verification"
+    Invoke-Native -FilePath $Node -Arguments @("--test", "quiz/test_quiz.mjs", "quiz/test_backup.mjs", "scripts/test-sites.mjs", "scripts/test-public-ux.mjs") -Label "Repository verification"
 
     if (-not $VerifyOnly) {
         if ([string]::IsNullOrWhiteSpace($DeployScript)) {
@@ -53,7 +53,7 @@ try {
             "--cwd", $Root,
             "--expected-slug", "aws-saa-c03-study",
             "--private-marker", "SAA_BACKUP"
-        ) -Label "Private Site deployment"
+        ) -Label "Site deployment"
     }
 }
 finally {
