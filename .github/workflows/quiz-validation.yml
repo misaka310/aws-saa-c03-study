@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: repository-validation-${{ github.event.pull_request.number || github.ref }}
@@ -28,3 +28,22 @@ jobs:
         run: node scripts/build-sites.mjs
       - name: Verify repository
         run: node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs scripts/test-public-ux.mjs
+
+  apply-quiz-default-fix:
+    name: Apply first-run quiz fallback fix
+    if: github.event_name == 'pull_request' && github.head_ref == 'ux-public-entry' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Patch quiz fallback
+        run: python3 scripts/fix-quiz-default.py
+      - name: Commit source fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add quiz/index.html
+          git commit -m 'Fix first-run quiz fallback'
+          git push origin HEAD:${{ github.head_ref }}
