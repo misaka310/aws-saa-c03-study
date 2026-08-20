@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AWS SAA-C03 問題演習</title>
+  <style>
+    :root {
+      --bg: #f6f1e7; --panel: #fff; --ink: #263238; --muted: #607d8b; --line: #d8e0d2;
+      --green: #2d6a00; --soft: #e8f5df; --orange: #ff9900; --warn: #fff4c2;
+      --bad: #b00020; --good: #146c2e;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.65; }
+    header { background: linear-gradient(90deg, #245d00, #3b8105, #edf8dd); color: #fff; padding: 18px 24px; border-bottom: 6px solid #fff; }
+    h1 { margin: 0; font-size: clamp(26px, 4vw, 44px); }
+    .layout { display: grid; grid-template-columns: 280px minmax(0, 850px) 280px; max-width: 1410px; margin: 0 auto; background: var(--panel); min-height: calc(100vh - 92px); }
+    aside { background: var(--soft); padding: 16px; border-right: 1px solid var(--line); }
+    aside.right { border-left: 1px solid var(--line); border-right: 0; }
+    main { padding: 16px 18px 42px; }
+    .side-title { display: flex; gap: 8px; align-items: center; margin: 0 0 10px; color: #5b676b; font-weight: 800; font-size: 19px; }
+    .side-title::before { content: ""; width: 10px; height: 26px; background: var(--green); display: inline-block; }
+    .nav-button { width: 100%; text-align: left; border: 0; background: transparent; color: #263238; padding: 8px 8px 8px 22px; cursor: pointer; font-size: 15px; border-radius: 6px; position: relative; }
+    .nav-button::before { content: "✓"; position: absolute; left: 4px; color: var(--green); font-weight: 800; }
+    .nav-button.active, .nav-button:hover { background: #fff; font-weight: 800; }
+    .notice, .score-box { border: 1px solid var(--line); background: #fff; padding: 10px 12px; border-radius: 8px; margin: 12px 0; color: #455a64; font-size: 14px; }
+    .orange-title { background: var(--orange); color: #fff; padding: 10px 12px; font-weight: 800; font-size: 18px; border-radius: 2px 2px 0 0; }
+    .card { border: 1px dashed #7b7b7b; background: var(--warn); padding: 14px; margin-bottom: 12px; }
+    .meta-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .pill { display: inline-flex; border-radius: 999px; padding: 3px 10px; background: #edf7e8; color: #2e5a1a; font-weight: 700; font-size: 13px; border: 1px solid #c7dec0; }
+    .question-title { font-size: 18px; font-weight: 750; margin: 8px 0 14px; white-space: pre-wrap; }
+    .choices { display: grid; gap: 8px; }
+    .choice { display: grid; grid-template-columns: 28px 1fr; gap: 8px; background: #fffeda; border: 1px solid #f0e695; border-radius: 6px; padding: 9px 10px; cursor: pointer; }
+    .choice input { width: 20px; height: 20px; margin-top: 2px; }
+    .choice.correct { outline: 2px solid var(--good); background: #e9f7ee; }
+    .choice.wrong { outline: 2px solid var(--bad); background: #fff0f2; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; }
+    button.primary, button.secondary { border: 1px solid #b7b7b7; border-radius: 4px; padding: 10px 16px; font-size: 15px; cursor: pointer; }
+    button.primary { background: #6aa84f; color: #fff; border-color: #5a9641; font-weight: 700; }
+    button.secondary { background: #eee; color: #333; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .answer-box { border: 1px dashed #7b7b7b; background: var(--warn); margin-top: 12px; display: none; }
+    .answer-box.visible { display: block; }
+    .answer-head { background: var(--orange); color: #fff; font-weight: 800; padding: 8px 12px; }
+    .answer-body { padding: 12px; }
+    .result-good { color: var(--good); font-size: 26px; font-weight: 800; }
+    .result-bad { color: var(--bad); font-size: 26px; font-weight: 800; }
+    .explanation { background: #fff; border-left: 6px solid var(--orange); padding: 12px; margin-top: 10px; }
+    .choice-reasons { display: grid; gap: 8px; margin: 8px 0 12px; }
+    .choice-reason { display: grid; grid-template-columns: 88px 1fr; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fafcf9; }
+    .choice-reason strong { color: #37474f; }
+    .small { color: var(--muted); font-size: 13px; }
+    .progress { height: 12px; background: #edf0ed; border-radius: 999px; overflow: hidden; margin: 8px 0; }
+    .progress > div { height: 100%; background: var(--green); width: 0%; transition: width .2s; }
+    .stat-grid { display: grid; gap: 8px; }
+    .stat-item { background: #fff; padding: 10px; border-radius: 6px; border: 1px solid var(--line); }
+    .review-list { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+    .weakness-list { display: grid; gap: 7px; }
+    .weakness-item { border-bottom: 1px solid var(--line); padding: 0 0 7px; }
+    .weakness-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .weakness-name { display: flex; justify-content: space-between; gap: 8px; font-weight: 800; }
+    .domain-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .domain-table td { border-bottom: 1px solid var(--line); padding: 5px; }
+    .danger { color: var(--bad); font-weight: 800; }
+    .term { position: relative; display: inline-block; border-bottom: 1px dotted var(--green); color: #1f5f00; font-weight: 800; cursor: help; outline-offset: 3px; }
+    .term:focus-visible { outline: 2px solid var(--orange); border-radius: 2px; }
+    .term::after { content: attr(data-tip); display: none; position: absolute; left: 0; bottom: calc(100% + 8px); z-index: 20; width: max-content; max-width: min(360px, 80vw); padding: 8px 10px; border-radius: 6px; background: #263238; color: #fff; font-size: 13px; line-height: 1.5; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,.22); white-space: normal; overflow-wrap: anywhere; pointer-events: none; }
+    .term::before { content: ""; display: none; position: absolute; left: 12px; bottom: calc(100% + 2px); z-index: 21; border: 6px solid transparent; border-top-color: #263238; }
+    .term:hover::after, .term:focus::after, .term:hover::before, .term:focus::before { display: block; }
+    .portal-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 18px; background: #17360d; color: #fff; }
+    .portal-bar a { color: #fff; font-weight: 800; text-decoration: none; }
+    .portal-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .portal-links a { border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 5px 10px; font-size: 13px; }
+    .backup-actions { display: grid; gap: 8px; }
+    .file-action { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: #263238; padding: 8px 8px 8px 22px; cursor: pointer; font-size: 15px; border-radius: 6px; position: relative; }
+    .file-action::before { content: "⇄"; position: absolute; left: 3px; color: var(--green); font-weight: 800; }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } aside, aside.right { border: 0; } main { order: -1; } .portal-bar { align-items: flex-start; } }
+    @media (max-width: 560px) {
+      .term::after { position: fixed; left: 12px; right: 12px; bottom: 12px; width: auto; max-width: none; }
+      .term::before { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="portal-bar">
+  <a href="../index.html">← AWS SAA 学習ポータル</a>
+  <div><strong>105問の問題バンク</strong> · 学習履歴はこのブラウザに保存</div>
+  <div class="portal-links"><a href="../index.html?doc=01-start-here">教材</a><a href="./?mode=weakness">弱点</a><a href="../index.html?doc=08-final-review">最終確認</a></div>
+</div>
+<header><h1>AWS SAA-C03 問題演習</h1></header>
+<div class="layout">
+  <aside>
+    <h2 class="side-title">モード</h2>
+    <button class="nav-button active" data-mode="exam">65問模試</button>
+    <button class="nav-button" data-mode="all">全問題</button>
+    <button class="nav-button" data-mode="new">新着問題</button>
+    <button class="nav-button" data-mode="unanswered">未回答だけ</button>
+    <button class="nav-button" data-mode="wrong">間違いだけ</button>
+    <button class="nav-button" data-mode="weakness">弱点補強</button>
+    <h2 class="side-title">分野</h2>
+    <button class="nav-button" data-domain="secure">Secure</button>
+    <button class="nav-button" data-domain="resilient">Resilient</button>
+    <button class="nav-button" data-domain="performance">Performance</button>
+    <button class="nav-button" data-domain="cost">Cost</button>
+    <div class="notice">リロード後は、現在のセット内で最初の未回答問題から再開する。点線下線の用語はマウスオーバー・クリック・キーボード選択で説明を表示する。</div>
+    <h2 class="side-title">操作</h2>
+    <button class="nav-button" id="shuffleBtn">現在のセットをシャッフル</button>
+    <button class="nav-button" id="newExamBtn">65問模試を作り直す</button>
+    <button class="nav-button" id="resetBtn">成績をリセット</button>
+    <div class="backup-actions">
+      <button class="file-action" id="exportBackupBtn" type="button">成績をJSONで書き出す</button>
+      <label class="file-action" for="importBackupInput">JSONから成績を復元</label>
+      <input id="importBackupInput" type="file" accept="application/json" hidden>
+    </div>
+    <div class="notice">PCとスマホの成績は別々に保存されます。端末を移るときはJSONを書き出して、移動先で復元してください。</div>
+  </aside>
+  <main>
+    <div class="orange-title" id="quizTitle">65問模試</div>
+    <section class="card">
+      <div class="meta-row"><span class="pill" id="domainPill">Exam</span><span class="pill" id="batchPill" hidden></span><span class="pill" id="counterPill">1 / 65</span><span class="pill" id="selectPill">1つ選択</span><span class="pill" id="timerPill">130:00</span></div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <div class="question-title" id="questionText"></div>
+      <div class="choices" id="choices"></div>
+      <div class="actions"><button class="primary" id="answerBtn">解答する</button><button class="secondary" id="prevBtn">前へ</button><button class="secondary" id="nextBtn">次へ</button></div>
+    </section>
+    <section class="answer-box" id="answerBox"><div class="answer-head">解答</div><div class="answer-body"><div id="resultText"></div><p id="yourAnswer"></p><p id="correctAnswer"></p><div class="explanation" id="explanation"></div></div></section>
+  </main>
+  <aside class="right">
+    <div class="orange-title">Score</div>
+    <div class="score-box"><div class="stat-grid"><div class="stat-item"><strong id="scoreText">0 / 0</strong><br><span class="small">正解 / 解答済み</span></div><div class="stat-item"><strong id="rateText">-</strong><br><span class="small">正答率</span></div><div class="stat-item"><strong id="remainingText">残り - 問</strong><br><span class="small">現在のセット</span></div></div></div>
+    <div class="orange-title">分野別</div><div class="score-box"><table class="domain-table" id="domainStats"></table></div>
+    <div class="orange-title">弱点</div><div class="score-box"><div class="small">過去の誤答を消さずに集計。正解を重ねると優先度が下がる。</div><div class="weakness-list" id="weaknessList"></div></div>
+    <div class="orange-title">間違えた問題</div><div class="score-box"><div class="small">最後の回答が不正解の問題。クリックで移動。</div><ol class="review-list" id="reviewList"></ol></div>
+    <div class="orange-title">学習の目安</div><div class="score-box small">点数だけで判断せず、同じ論点の誤答が続く場合は該当教材と弱点補強へ戻る。正解理由と、迷った選択肢を外す理由を説明できる状態を目指す。</div>
+  </aside>
+</div>
+<script src="./glossary.js"></script>
+<script src="./questions.js"></script>
+<script src="./choice-reasons.js"></script>
+<script src="./learning-state.js"></script>
+<script src="./backup.js"></script>
+<script>
+const LABELS = { secure: "Secure", resilient: "Resilient", performance: "Performance", cost: "Cost" };
+const PUBLIC_MODES = ["exam", "all", "new", "unanswered", "wrong", "weakness"];
+const LATEST_BATCH = window.SAA_LATEST_BATCH;
+const LEARNING = window.SAA_LEARNING;
+const GLOSSARY = window.SAA_GLOSSARY;
+const GLOSSARY_BOUNDARY = window.SAA_GLOSSARY_BOUNDARY;
+const glossaryMap = new Map(GLOSSARY.map(([term, tip]) => [term.toLowerCase(), tip]));
+const escapeRegex = term => term.replace(/[.*+?^${}()|[\]\\]/g, char => `\\${char}`);
+const glossaryRegex = new RegExp(GLOSSARY.map(([term]) => escapeRegex(term)).sort((a, b) => b.length - a.length).join("|"), "gi");
+const storeKey = "saa-c03-study-results-v2";
+const stateKey = "saa-c03-study-state-v3";
+let results = LEARNING.normalizeResults(JSON.parse(localStorage.getItem(storeKey) || "{}"));
+localStorage.setItem(storeKey, JSON.stringify(results));
+let state = { mode: "exam", order: [], index: 0, domain: null, start: Date.now(), duration: 130 * 60 * 1000 };
+const el = {
+  nav: [...document.querySelectorAll("[data-mode]")], domains: [...document.querySelectorAll("[data-domain]")], title: quizTitle,
+  domainPill, batchPill, counterPill, selectPill, timerPill, bar: progressBar, q: questionText, choices,
+  answerBtn, prevBtn, nextBtn, answerBox, resultText, yourAnswer, correctAnswer, explanation, scoreText, rateText, remainingText, reviewList, weaknessList, domainStats
+};
+function escapeHtml(text) { return String(text).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
+function escapeAttr(text) { return escapeHtml(text).replace(/`/g, "&#96;"); }
+function withGlossary(text) {
+  return escapeHtml(text).replace(glossaryRegex, (match, offset, source) => {
+    if (!GLOSSARY_BOUNDARY.canWrap(source, offset, match)) return match;
+    const tip = glossaryMap.get(match.toLowerCase());
+    const label = `${match}: ${tip}`;
+    return tip ? `<span class="term" tabindex="0" data-tip="${escapeAttr(tip)}" aria-label="${escapeAttr(label)}">${match}</span>` : match;
+  });
+}
+function choiceReasonsHtml(q) {
+  if (!Array.isArray(q.r) || q.r.length !== q.c.length) {
+    return `<div class="small">この既存問題は選択肢別解説の追加前に作成されています。判断理由を基に、各選択肢が要件へ合うか確認してください。</div>`;
+  }
+  return `<div class="choice-reasons">${q.r.map((reason, i) => {
+    const verdict = q.a.includes(i) ? "正解" : "不正解";
+    return `<div class="choice-reason"><strong>${String.fromCharCode(65 + i)}. ${verdict}</strong><span>${withGlossary(reason)}</span></div>`;
+  }).join("")}</div>`;
+}
+function same(a, b) { return a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i]); }
+function pick(arr, n) { return [...arr].sort(() => Math.random() - .5).slice(0, n); }
+function questionById(id) { return window.SAA_QUESTIONS.find(q => q.id === id); }
+function currentSet() { return state.order.map(questionById).filter(Boolean); }
+function current() { return currentSet()[state.index]; }
+function firstUnansweredIndex(set) {
+  const idx = set.findIndex(q => !results[q.id]);
+  return idx >= 0 ? idx : Math.min(state.index || 0, Math.max(set.length - 1, 0));
+}
+function startIndexForMode(mode, set) {
+  return mode === "weakness" ? 0 : firstUnansweredIndex(set);
+}
+function saveState() {
+  localStorage.setItem(stateKey, JSON.stringify({ mode: state.mode, order: state.order, index: state.index, domain: state.domain, start: state.start }));
+}
+function validOrder(order) {
+  return Array.isArray(order) && order.length > 0 && order.every(id => questionById(id));
+}
+function buildExam() {
+  const bp = window.SAA_EXAM_BLUEPRINT;
+  const examPool = window.SAA_QUESTIONS;
+  let ids = [];
+  for (const d of Object.keys(bp)) ids.push(...pick(examPool.filter(q => q.domain === d), bp[d]).map(q => q.id));
+  return ids.sort(() => Math.random() - .5);
+}
+function setActiveButtons() {
+  el.nav.forEach(b => b.classList.toggle("active", b.dataset.mode === state.mode));
+  el.domains.forEach(b => b.classList.toggle("active", state.mode === "domain" && b.dataset.domain === state.domain));
+}
+function setMode(mode, opts = {}) {
+  state.mode = mode; state.domain = null;
+  if (mode === "exam") {
+    state.order = opts.keepOrder && validOrder(state.order) ? state.order : buildExam();
+    state.start = opts.keepTimer ? state.start : Date.now();
+  }
+  if (mode === "all") state.order = window.SAA_QUESTIONS.map(q => q.id);
+  if (mode === "new") state.order = window.SAA_QUESTIONS.filter(q => q.batch === LATEST_BATCH).map(q => q.id);
+  if (mode === "unanswered") state.order = window.SAA_QUESTIONS.filter(q => !results[q.id]).map(q => q.id);
+  if (mode === "wrong") state.order = window.SAA_QUESTIONS.filter(q => results[q.id] && !results[q.id].ok).map(q => q.id);
+  if (mode === "weakness") state.order = LEARNING.buildReinforcementSet(window.SAA_QUESTIONS, results, 20);
+  state.index = startIndexForMode(mode, currentSet());
+  setActiveButtons(); saveState(); render();
+}
+function setDomain(domain) {
+  state.mode = "domain"; state.domain = domain;
+  state.order = window.SAA_QUESTIONS.filter(q => q.domain === domain).map(q => q.id);
+  state.index = firstUnansweredIndex(currentSet());
+  setActiveButtons(); saveState(); render();
+}
+function restoreOrStart() {
+  const params = new URLSearchParams(location.search);
+  const requestedDomain = params.get("domain");
+  const requestedMode = params.get("mode");
+  if (Object.hasOwn(LABELS, requestedDomain)) { setDomain(requestedDomain); return; }
+  if (PUBLIC_MODES.includes(requestedMode)) { setMode(requestedMode); return; }
+  const saved = JSON.parse(localStorage.getItem(stateKey) || "null");
+  if (saved && (PUBLIC_MODES.includes(saved.mode) || (saved.mode === "domain" && Object.hasOwn(LABELS, saved.domain)))) {
+    state.mode = saved.mode; state.domain = saved.domain || null; state.start = saved.start || Date.now();
+    if (saved.mode === "exam" && validOrder(saved.order)) state.order = saved.order;
+    else if (saved.mode === "all") state.order = window.SAA_QUESTIONS.map(q => q.id);
+    else if (saved.mode === "new") state.order = window.SAA_QUESTIONS.filter(q => q.batch === LATEST_BATCH).map(q => q.id);
+    else if (saved.mode === "unanswered") state.order = window.SAA_QUESTIONS.filter(q => !results[q.id]).map(q => q.id);
+    else if (saved.mode === "wrong") state.order = window.SAA_QUESTIONS.filter(q => results[q.id] && !results[q.id].ok).map(q => q.id);
+    else if (saved.mode === "weakness") state.order = LEARNING.buildReinforcementSet(window.SAA_QUESTIONS, results, 20);
+    else if (saved.mode === "domain" && state.domain) state.order = window.SAA_QUESTIONS.filter(q => q.domain === state.domain).map(q => q.id);
+    else state.order = buildExam();
+    state.index = startIndexForMode(state.mode, currentSet());
+    setActiveButtons(); saveState(); render();
+    return;
+  }
+  setMode("exam");
+}
+function render() {
+  const set = currentSet();
+  if (!set.length) {
+    el.title.textContent = state.mode === "weakness" ? "弱点補強" : "問題なし"; el.q.textContent = state.mode === "weakness" ? "まだ弱点履歴がありません。問題を解いて誤答すると、関連問題がここへ表示されます。" : "この条件の問題はありません。"; el.choices.innerHTML = ""; el.batchPill.hidden = true; el.batchPill.textContent = ""; el.answerBox.classList.remove("visible"); updateStats(); return;
+  }
+  const q = current();
+  el.title.textContent = state.mode === "exam" ? "65問模試" : state.mode === "new" ? "新着問題" : state.mode === "unanswered" ? "未回答問題" : state.mode === "wrong" ? "間違い復習" : state.mode === "weakness" ? "弱点補強" : state.mode === "domain" ? LABELS[q.domain] : "全問題";
+  el.domainPill.textContent = LABELS[q.domain];
+  el.batchPill.hidden = !q.batch;
+  el.batchPill.textContent = q.batch ? "新着" : "";
+  el.counterPill.textContent = `${state.index + 1} / ${set.length}`;
+  el.selectPill.textContent = q.a.length > 1 ? `${q.a.length}つ選択` : "1つ選択";
+  el.bar.style.width = `${((state.index + 1) / set.length) * 100}%`;
+  el.q.innerHTML = withGlossary(q.q);
+  el.choices.innerHTML = "";
+  q.c.forEach((choice, i) => {
+    const label = document.createElement("label"); label.className = "choice";
+    const input = document.createElement("input"); input.type = q.a.length > 1 ? "checkbox" : "radio"; input.name = "choice"; input.value = i;
+    const span = document.createElement("span"); span.innerHTML = withGlossary(`${String.fromCharCode(65 + i)}. ${choice}`);
+    label.append(input, span); el.choices.append(label);
+  });
+  el.answerBox.classList.remove("visible");
+  el.prevBtn.disabled = state.index === 0; el.nextBtn.disabled = state.index === set.length - 1;
+  saveState(); updateStats();
+}
+function selected() { return [...document.querySelectorAll("input[name=choice]:checked")].map(x => Number(x.value)); }
+function showAnswer(pick, save = true) {
+  const q = current(); if (!pick.length) return;
+  const ok = same(pick, q.a);
+  if (save) { results = LEARNING.recordAttempt(results, q.id, pick, ok, new Date().toISOString()); localStorage.setItem(storeKey, JSON.stringify(results)); }
+  document.querySelectorAll(".choice").forEach((node, i) => { node.classList.toggle("correct", q.a.includes(i)); node.classList.toggle("wrong", pick.includes(i) && !q.a.includes(i)); });
+  el.resultText.className = ok ? "result-good" : "result-bad"; el.resultText.textContent = ok ? "正解" : "不正解";
+  el.yourAnswer.innerHTML = "あなたの回答: " + pick.map(i => withGlossary(`${i + 1}. ${q.c[i]}`)).join(" / ");
+  el.correctAnswer.innerHTML = "正解: " + q.a.map(i => withGlossary(`${i + 1}. ${q.c[i]}`)).join(" / ");
+  el.explanation.innerHTML = `<strong>正解の決め手:</strong><br>${withGlossary(q.e)}<br><br><strong>各選択肢が○/×になる理由:</strong>${choiceReasonsHtml(q)}<strong>復習ポイント:</strong> 正解名ではなく、各候補が問題文のどの条件を満たす／満たさないかで見分ける。`;
+  el.answerBox.classList.add("visible"); saveState(); updateStats();
+}
+function updateStats() {
+  const set = currentSet(); const answered = set.filter(q => results[q.id]); const correct = answered.filter(q => results[q.id].ok);
+  el.scoreText.textContent = `${correct.length} / ${answered.length}`;
+  el.rateText.textContent = answered.length ? `${Math.round(correct.length / answered.length * 100)}%` : "-";
+  el.remainingText.textContent = `残り ${set.length - answered.length} 問`;
+  el.domainStats.innerHTML = Object.keys(LABELS).map(d => {
+    const qs = set.filter(q => q.domain === d); const ans = qs.filter(q => results[q.id]); const ok = ans.filter(q => results[q.id].ok); const rate = ans.length ? Math.round(ok.length / ans.length * 100) + "%" : "-";
+    return `<tr><td>${LABELS[d]}</td><td>${ok.length}/${ans.length}</td><td>${rate}</td></tr>`;
+  }).join("");
+  const weaknesses = LEARNING.buildWeaknessSummary(window.SAA_QUESTIONS, results).slice(0, 5);
+  el.weaknessList.innerHTML = weaknesses.length ? weaknesses.map(item => `<div class="weakness-item"><div class="weakness-name"><span>${escapeHtml(item.label)}</span><span>${item.score.toFixed(1)}</span></div><div class="small">誤答 ${item.wrong}回 / 未解決 ${item.unresolved}問</div></div>`).join("") : `<div class="small">まだ弱点履歴はありません。</div>`;
+  el.reviewList.innerHTML = "";
+  set.filter(q => results[q.id] && !results[q.id].ok).forEach(q => {
+    const li = document.createElement("li"); li.textContent = `${q.id} ${q.q.slice(0, 26)}...`; li.style.cursor = "pointer";
+    li.onclick = () => { state.index = set.findIndex(x => x.id === q.id); render(); };
+    el.reviewList.append(li);
+  });
+}
+function exportBackup() {
+  const bundle = window.SAA_BACKUP.createBundle(localStorage);
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `saa-c03-study-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+async function importBackup(file) {
+  const payload = JSON.parse(await file.text());
+  window.SAA_BACKUP.restoreBundle(localStorage, payload);
+  alert("成績・回答履歴・弱点を復元しました。画面を再読み込みします。");
+  location.reload();
+}
+function tick() {
+  if (state.mode !== "exam") { el.timerPill.textContent = "練習"; return; }
+  const left = Math.max(0, state.duration - (Date.now() - state.start)); const m = Math.floor(left / 60000); const s = Math.floor((left % 60000) / 1000);
+  el.timerPill.textContent = `${String(m).padStart(3, "0")}:${String(s).padStart(2, "0")}`;
+  el.timerPill.className = left < 10 * 60 * 1000 ? "pill danger" : "pill";
+}
+el.answerBtn.onclick = () => showAnswer(selected(), true);
+el.prevBtn.onclick = () => { state.index--; render(); };
+el.nextBtn.onclick = () => { state.index++; render(); };
+shuffleBtn.onclick = () => { state.order = state.order.sort(() => Math.random() - .5); state.index = firstUnansweredIndex(currentSet()); saveState(); render(); };
+newExamBtn.onclick = () => setMode("exam");
+resetBtn.onclick = () => { if (confirm("成績をリセットしますか？")) { results = {}; localStorage.removeItem(storeKey); localStorage.removeItem(stateKey); setMode("exam"); } };
+exportBackupBtn.onclick = exportBackup;
+importBackupInput.onchange = async event => {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  try { await importBackup(file); }
+  catch (error) { alert(`復元できませんでした: ${error.message}`); }
+};
+el.nav.forEach(b => b.onclick = () => setMode(b.dataset.mode));
+el.domains.forEach(b => b.onclick = () => setDomain(b.dataset.domain));
+setInterval(tick, 1000);
+restoreOrStart();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e091204a93b2b6',t:'MTc4NzIyMDE5Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
