@@ -1,0 +1,14 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / test artifacts
+node_modules/
+coverage/
+dist/
+*.log
+
+# Local browser data
+.local/

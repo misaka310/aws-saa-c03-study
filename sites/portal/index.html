@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS SAA-C03 学習ポータル</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="site-header">
+<div><p class="eyebrow">AWS SAA-C03</p><h1>AWS SAA-C03 学習ポータル</h1><p>基礎整理から問題演習、弱点補強、最終確認まで順番に進められます。</p></div>
+<div class="exam-card"><span>問題バンク</span><strong>105問</strong><b>65問模試にも対応</b></div>
+</header>
+<nav class="purpose-nav" aria-label="主な機能">
+<button class="purpose-button is-active" data-panel="materials" type="button">教材</button>
+<a class="purpose-button" href="./quiz/?mode=all">問題演習</a>
+<a class="purpose-button" href="./quiz/?mode=weakness">弱点補強</a>
+<button class="purpose-button" data-panel="final" type="button">最終確認</button>
+</nav>
+<main>
+<section aria-labelledby="study-path-title">
+<p class="eyebrow">Study path</p>
+<h2 id="study-path-title">この順番で進める</h2>
+<div class="quick-grid">
+<a class="quick-card" href="?doc=01-start-here"><strong>1. はじめる</strong><span>全体の進め方と、自分の開始位置を確認</span></a>
+<a class="quick-card" href="?doc=02-service-selection"><strong>2. サービスを選び分ける</strong><span>似たAWSサービスを要件で比較</span></a>
+<a class="quick-card" href="?doc=03-secure-architectures"><strong>3. 4分野を学ぶ</strong><span>Secure → Resilient → High-Performing → Cost-Optimized</span></a>
+<a class="quick-card" href="./quiz/?mode=all"><strong>4. 問題で判断力を付ける</strong><span>全105問・分野別練習で知識を選択判断へ</span></a>
+<a class="quick-card" href="./quiz/?mode=weakness"><strong>5. 弱点を補強する</strong><span>誤答履歴から苦手な論点を重点復習</span></a>
+<a class="quick-card" href="?doc=08-final-review"><strong>6. 最終確認</strong><span>混同しやすいサービスと試験中の判断を確認</span></a>
+</div>
+</section>
+<section aria-labelledby="practice-title">
+<p class="eyebrow">Practice</p>
+<h2 id="practice-title">問題演習</h2>
+<div class="quick-grid">
+<a class="quick-card" href="./quiz/?mode=all"><strong>全105問練習</strong><span>標準問題を一通り解く</span></a>
+<a class="quick-card" href="./quiz/?mode=exam"><strong>65問模試</strong><span>4分野をまたいで本番形式で確認</span></a>
+<a class="quick-card" href="./quiz/?mode=unanswered"><strong>未回答だけ</strong><span>まだ解いていない問題を進める</span></a>
+<a class="quick-card" href="./quiz/?mode=wrong"><strong>間違いだけ</strong><span>直近で間違えた問題を解き直す</span></a>
+<a class="quick-card" href="./quiz/?mode=weakness"><strong>弱点補強</strong><span>苦手論点に関連する問題を解く</span></a>
+<a class="quick-card" href="./quiz/?domain=secure"><strong>分野別練習</strong><span>Secure / Resilient / Performance / Cost</span></a>
+</div>
+</section>
+<section class="portal-layout" id="materials-panel">
+<aside class="document-nav">
+<p class="eyebrow">Materials</p><h2>教材 01–09</h2>
+<label for="doc-search">教材を検索</label><input id="doc-search" type="search" placeholder="例: VPC、RDS、コスト">
+<div id="document-list" class="document-list"></div>
+</aside>
+<article class="document-view">
+<div class="document-toolbar"><div><p class="eyebrow" id="document-category">教材</p><h2 id="document-title">読み込み中</h2></div><a href="./quiz/?mode=all">問題で確認する</a></div>
+<div id="document-content" class="markdown-body"></div>
+</article>
+</section>
+<section class="final-panel" id="final-panel" hidden>
+<p class="eyebrow">Final review</p><h2>仕上げに使うもの</h2><p>新しい教材を増やさず、問題の読み方と未解決の論点だけを確認します。</p>
+<div class="final-grid">
+<button type="button" data-open-doc="07-exam-strategy"><strong>07 試験戦略</strong><span>要件の拾い方と選択肢の外し方</span></button>
+<button type="button" data-open-doc="08-final-review"><strong>08 最終確認</strong><span>混同しやすいサービスを短時間で確認</span></button>
+<button type="button" data-open-doc="09-visual-review"><strong>09 図解復習</strong><span>迷う論点だけ図で整理</span></button>
+<a href="./quiz/?mode=wrong"><strong>間違いだけ解く</strong><span>未解決の問題へ戻る</span></a>
+</div>
+</section>
+<section class="image-section"><p class="eyebrow">Diagrams</p><h2>図解画像一覧</h2><p>教材内の図をまとめて確認できます。</p><div id="image-gallery" class="image-gallery"></div></section>
+</main>
+<dialog id="image-dialog" class="image-dialog"><button id="close-image-dialog" type="button">×</button><img id="dialog-image" alt=""><p id="dialog-caption"></p></dialog>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+<script src="./app.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e091195df32d1f',t:'MTc4NzIyMDE5Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
