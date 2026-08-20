@@ -38,6 +38,8 @@ test('公開HTMLのソースに配信基盤の一時コードを混入させな�
 test('初回の問題演習は全問題モードから始める', () => {
   assert.match(quiz, /let state = \{ mode: "all"/);
   assert.ok(quiz.indexOf('data-mode="all">全問題') < quiz.indexOf('data-mode="exam">65問模試'));
+  assert.match(quiz, /\n  setMode\("all"\);\n}\nfunction render\(\)/);
+  assert.doesNotMatch(quiz, /\n  setMode\("exam"\);\n}\nfunction render\(\)/);
 });
 
 test('Site更新スクリプトは公開状態とCIの検証内容に整合する', () => {
