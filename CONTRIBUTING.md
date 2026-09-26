@@ -14,12 +14,6 @@ node scripts/build-sites.mjs
 node --test quiz/test_quiz.mjs quiz/test_backup.mjs scripts/test-sites.mjs scripts/test-public-ux.mjs
 ```
 
-Windowsでは、デプロイせずbuildとtestだけ行う場合に次も利用できます。
-
-```powershell
-./scripts/update-site.ps1 -VerifyOnly
-```
-
 ## コンテンツルール
 
 - AWSサービス仕様や試験情報はAWS公式資料を優先します。
@@ -32,10 +26,11 @@ Windowsでは、デプロイせずbuildとtestだけ行う場合に次も利用�
 ## 公開リポジトリとしてのルール
 
 - 個人PCの絶対パス、credential、token、Cookie、個人専用の運用メモをコミットしません。
-- デプロイ環境固有のツールは環境変数または明示引数から渡します。
+- デプロイ環境固有のツールやアカウント固有のIDを公開手順へ固定しません。
 - READMEは公開サイトが利用できない場合でも、第三者がローカルでbuild・testできる内容を保ちます。
 - 一時生成物は `.gitignore` の対象にし、公開成果物の正本と混在させません。
+- 一時的な実装計画や作業メモは、役目を終えたら公開ドキュメントとして残しません。
 
 ## デプロイ
 
-`scripts/update-site.ps1` のデプロイ機能は任意です。公開リポジトリだけで完結する検証は `-VerifyOnly` で実行できます。デプロイ用adapterや補助ツールの場所はリポジトリへ固定せず、引数または環境変数で指定してください。
+公開リポジトリの受入条件はローカルbuildとtestまでです。ホスティングへの反映は環境側の正規手順で行い、credential、個人端末のパス、deployment履歴をこのリポジトリへ保存しません。
