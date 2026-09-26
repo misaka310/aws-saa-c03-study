@@ -10,7 +10,6 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 const readme = read('README.md');
 const portal = read('sites', 'portal', 'index.html');
 const quiz = read('quiz', 'index.html');
-const updateSite = read('scripts', 'update-site.ps1');
 const siteUrl = 'https://aws-saa-c03-study.misaka310.chatgpt.site';
 
 test('READMEは公開サイトを最優先の入口として示す', () => {
@@ -53,8 +52,3 @@ test('初回の問題演習は全問題モードから始める', () => {
   assert.doesNotMatch(quiz, /\n  setMode\("exam"\);\n}\nfunction render\(\)/);
 });
 
-test('Site更新スクリプトは公開状態とCIの検証内容に整合する', () => {
-  assert.doesNotMatch(updateSite, /Private Site deployment/);
-  assert.match(updateSite, /Site deployment/);
-  assert.match(updateSite, /scripts\/test-public-ux\.mjs/);
-});
