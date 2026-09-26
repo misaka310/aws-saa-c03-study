@@ -24,6 +24,17 @@ test('READMEは公開サイトを最優先の入口として示す', () => {
   assert.doesNotMatch(readme, /問題を解く[^\n]*\(\.\/quiz\/\)/);
 });
 
+test('READMEは初見の公開リポジトリ訪問者へ構成と検証を示す', () => {
+  assert.match(readme, /## プロジェクトの特徴/);
+  assert.match(readme, /## 技術構成/);
+  assert.match(readme, /## GitHubで読む・ローカルで使う/);
+  assert.match(readme, /## 品質確認/);
+  assert.match(readme, /## リポジトリ構成/);
+  for (const file of ['CONTRIBUTING.md', 'docs/ARCHITECTURE.md', 'docs/QUALITY.md']) {
+    assert.ok(fs.existsSync(path.join(root, file)), file + ': 公開品質文書がない');
+  }
+});
+
 test('公開ポータルはファーストビューから教材と問題演習へ進める', () => {
   assert.match(portal, /class="hero-actions"/);
   assert.match(portal, /href="\.\/quiz\/\?mode=all"/);
