@@ -136,7 +136,8 @@ test('Sites配布物は静的クライアントと最小Workerだけで構成さ
 test('検証と補助教材の手順は個人PCの絶対パスに依存しない', () => {
   const updateScript = fs.readFileSync(path.join(root, 'scripts', 'update-site.ps1'), 'utf8');
   const cantrillPlan = fs.readFileSync(path.join(root, 'docs', 'cantrill-integration-plan.md'), 'utf8');
-  assert.doesNotMatch(updateScript + cantrillPlan, /C:\\00_dev/i);
+  assert.doesNotMatch(updateScript + cantrillPlan, /[A-Za-z]:\\/);
   assert.match(updateScript, /CHATGPT_SITES_DEPLOY_SCRIPT/);
   assert.match(updateScript, /VerifyOnly/);
+  assert.doesNotMatch(updateScript, /Program Files|LOCALAPPDATA|AppData\\Roaming/);
 });

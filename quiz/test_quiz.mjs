@@ -190,7 +190,9 @@ test("READMEは利用者向けの入口に限定する", () => {
   assert.match(readme, /頻出用語の説明/);
   assert.match(readme, /重複・類似/);
   assert.match(readme, /aws-saa-c03-study\.misaka310\.chatgpt\.site/);
-  assert.doesNotMatch(readme, /ASCII|単語境界|localStorage|SAA_GLOSSARY_BOUNDARY|CHATGPT_SITES_DEPLOY_SCRIPT|build-sites\.mjs/);
+  assert.doesNotMatch(readme, /ASCII|単語境界|SAA_GLOSSARY_BOUNDARY|CHATGPT_SITES_DEPLOY_SCRIPT/);
+  assert.match(readme, /localStorage/);
+  assert.match(readme, /node scripts\/build-sites\.mjs/);
   assert.doesNotMatch(readme, /00-plan|05a-|05b-|09-mock-results|659\/1000|2026年8月14日/);
 });
 
