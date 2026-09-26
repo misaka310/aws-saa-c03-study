@@ -47,9 +47,23 @@ const removedLearnerFiles = [
   '12-mock3-mistake-visual-review.md',
   '12-mock3-mistake-visual-review.html',
   'INDEX.md',
+  'docs/cantrill-integration-plan.md',
+  'scripts/update-site.ps1',
 ];
 
 const privateQuestionMarkers = /SAA_LEGACY_PERSONALIZED_DRILLS|historical mock results|kind:\s*["']foundation["']|source:\s*["'][^"']*(?:mock|result)[^"']*["']/i;
+
+function publicMarkdownFiles() {
+  return [
+    'README.md',
+    'AGENTS.md',
+    'CONTRIBUTING.md',
+    'references.md',
+    ...fs.readdirSync(path.join(root, 'docs'))
+      .filter((name) => name.endsWith('.md'))
+      .map((name) => path.join('docs', name)),
+  ];
+}
 
 test('公開教材は01から09の学習順とreferencesだけを収録する', () => {
   assert.deepEqual(content.documents.map((doc) => doc.id), expectedLearnerDocs);
@@ -88,12 +102,31 @@ test('公開文書とSitesに個人履歴や内部実装説明を出さない', 
   assert.doesNotMatch(publicText, /00-plan|05a-|05b-|06-exam-traps|07-final-checklist|08-practice-strategy|10-cantrill-visual-review/);
 });
 
-test('旧番号文書と個人模試素材をリポジトリから除去する', () => {
+test('旧番号文書・個人模試素材・一時作業文書をリポジトリから除去する', () => {
   for (const file of removedLearnerFiles) {
-    assert.ok(!fs.existsSync(path.join(root, file)), `${file}: 旧文書が残っている`);
+    assert.ok(!fs.existsSync(path.join(root, file)), `${file}: 公開不要ファイルが残っている`);
   }
   const sourceImages = fs.readdirSync(path.join(root, 'images'));
   assert.ok(sourceImages.every((file) => !/^mock[23]-/i.test(file)), '個人模試由来画像が残っている');
+});
+
+test('公開Markdownに個人端末パス・credential・デプロイ内部情報を残さない', () => {
+  const forbidden = [
+    /[A-Za-z]:\\/,
+    /\/Users\//,
+    /\/home\//,
+    /appgprj_[A-Za-z0-9]+/,
+    /appgver_[A-Za-z0-9]+/,
+    /appgdep_[A-Za-z0-9]+/,
+    /CHATGPT_SITES_CODEX_JS/,
+    /CHATGPT_SITES_DEPLOY_SCRIPT/,
+  ];
+  for (const relativePath of publicMarkdownFiles()) {
+    const value = fs.readFileSync(path.join(root, relativePath), 'utf8');
+    for (const pattern of forbidden) {
+      assert.doesNotMatch(value, pattern, `${relativePath}: 公開不要な内部情報を含む`);
+    }
+  }
 });
 
 test('個人学習由来の固定問題データをソースにもSites成果物にも残さない', () => {
@@ -131,13 +164,4 @@ test('Sites配布物は静的クライアントと最小Workerだけで構成さ
   assert.equal(builtGlossary, sourceGlossary);
   assert.match(quizHtml, /<script src="\.\/glossary\.js"><\/script>/);
   assert.match(builtGlossary, /SAA_GLOSSARY_BOUNDARY/);
-});
-
-test('検証と補助教材の手順は個人PCの絶対パスに依存しない', () => {
-  const updateScript = fs.readFileSync(path.join(root, 'scripts', 'update-site.ps1'), 'utf8');
-  const cantrillPlan = fs.readFileSync(path.join(root, 'docs', 'cantrill-integration-plan.md'), 'utf8');
-  assert.doesNotMatch(updateScript + cantrillPlan, /[A-Za-z]:\\/);
-  assert.match(updateScript, /CHATGPT_SITES_DEPLOY_SCRIPT/);
-  assert.match(updateScript, /VerifyOnly/);
-  assert.doesNotMatch(updateScript, /Program Files|LOCALAPPDATA|AppData\\Roaming/);
 });
