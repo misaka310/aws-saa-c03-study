@@ -15,7 +15,7 @@ function Resolve-Tool {
         if ($Command) { return $Command.Source }
         if (Test-Path -LiteralPath $Candidate) { return (Resolve-Path -LiteralPath $Candidate).Path }
     }
-    throw "$Label was not found"
+    throw "$Label was not found on PATH or at the supplied path"
 }
 
 function Invoke-Native {
@@ -26,7 +26,7 @@ function Invoke-Native {
     }
 }
 
-$Node = Resolve-Tool -Candidates @("node.exe", "C:\Program Files\nodejs\node.exe") -Label "Node.js"
+$Node = Resolve-Tool -Candidates @("node.exe", "node") -Label "Node.js"
 
 Push-Location $Root
 try {
@@ -40,14 +40,16 @@ try {
         if (-not (Test-Path -LiteralPath $DeployScript)) {
             throw "Deploy script was not found: $DeployScript"
         }
-
-        $Python = Resolve-Tool -Candidates @("python.exe", "py.exe", "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe") -Label "Python"
         if ([string]::IsNullOrWhiteSpace($CodexJs)) {
-            $CodexJs = Resolve-Tool -Candidates @("$HOME\AppData\Roaming\npm\node_modules\@openai\codex\bin\codex.js") -Label "Codex CLI JavaScript entrypoint"
+            throw "Deployment requires -CodexJs or CHATGPT_SITES_CODEX_JS. Local verification does not require Codex."
+        }
+        if (-not (Test-Path -LiteralPath $CodexJs)) {
+            throw "Codex JavaScript entrypoint was not found: $CodexJs"
         }
 
+        $Python = Resolve-Tool -Candidates @("python.exe", "python", "py.exe", "py") -Label "Python"
         $env:CHATGPT_SITES_NODE = $Node
-        $env:CHATGPT_SITES_CODEX_JS = $CodexJs
+        $env:CHATGPT_SITES_CODEX_JS = (Resolve-Path -LiteralPath $CodexJs).Path
         Invoke-Native -FilePath $Python -Arguments @(
             (Resolve-Path -LiteralPath $DeployScript).Path,
             "--cwd", $Root,
