@@ -2,9 +2,10 @@
 
 ## 仕様と公開文書
 
+- 仕様の正本: `README.md`
 - 利用者向けの入口と学習方針は `README.md`。
 - 構成の責務は `docs/ARCHITECTURE.md`、品質基準は `docs/QUALITY.md`、変更手順は `CONTRIBUTING.md`。
-- 仕様や利用者向け挙動を変える場合は、実装・README・関連文書・検証を同じ変更で整合させる。
+- 実装前に意図する仕様を正本へ反映し、仕様変更時は同じ変更で正本・実装・関連文書・検証を更新して整合させる。
 
 ## Repository boundaries
 
