@@ -34,22 +34,41 @@ function refreshIdleTimer(server) {
   idleTimer.unref?.();
 }
 
+function buildClientFileIndex(root) {
+  const files = new Map();
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const relative = path.relative(root, fullPath).split(path.sep).join('/');
+      files.set(`/${relative}`, fullPath);
+    }
+  };
+  visit(root);
+  const index = files.get('/index.html');
+  if (index) files.set('/', index);
+  return files;
+}
+
+const clientFiles = buildClientFileIndex(clientRoot);
+
 function resolveRequestPath(urlPath) {
   let decoded;
   try {
-    decoded = decodeURIComponent(urlPath.split('?')[0]);
+    decoded = decodeURIComponent(String(urlPath || '/').split('?')[0]);
   } catch {
     return null;
   }
-  const relative = decoded.replace(/^\/+/, '') || 'index.html';
-  const candidate = path.resolve(clientRoot, relative);
-  if (candidate !== clientRoot && !candidate.startsWith(`${clientRoot}${path.sep}`)) return null;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-    const indexFile = path.join(candidate, 'index.html');
-    if (fs.existsSync(indexFile)) return indexFile;
-  }
-  return path.join(clientRoot, 'index.html');
+  const key = `/${decoded.replace(/^\/+/, '').replace(/\/+/g, '/')}`;
+  const direct = clientFiles.get(key === '/' ? '/' : key);
+  if (direct) return direct;
+  const directoryIndex = clientFiles.get(`${key.replace(/\/+$/, '')}/index.html`);
+  if (directoryIndex) return directoryIndex;
+  return clientFiles.get('/') || null;
 }
 
 const server = http.createServer((request, response) => {
