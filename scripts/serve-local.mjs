@@ -22,10 +22,30 @@ const contentTypes = new Map([
   ['.svg', 'image/svg+xml'],
 ]);
 
-if (!fs.existsSync(path.join(clientRoot, 'index.html'))) {
+const indexFile = path.join(clientRoot, 'index.html');
+if (!fs.existsSync(indexFile)) {
   console.error('dist/client/index.html is missing. Run node scripts/build-sites.mjs first.');
   process.exit(1);
 }
+
+function buildStaticFileMap(root) {
+  const files = new Map();
+  const visit = (directory, relativeDirectory = '') => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name);
+      const relative = relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        visit(absolute, relative);
+      } else if (entry.isFile()) {
+        files.set(relative, absolute);
+      }
+    }
+  };
+  visit(root);
+  return files;
+}
+
+const staticFiles = buildStaticFileMap(clientRoot);
 
 let idleTimer;
 function refreshIdleTimer(server) {
@@ -37,19 +57,17 @@ function refreshIdleTimer(server) {
 function resolveRequestPath(urlPath) {
   let decoded;
   try {
-    decoded = decodeURIComponent(urlPath.split('?')[0]);
+    decoded = decodeURIComponent(String(urlPath || '/').split('?')[0]);
   } catch {
     return null;
   }
+  if (decoded.includes('\0') || decoded.includes('\\')) return null;
   const relative = decoded.replace(/^\/+/, '') || 'index.html';
-  const candidate = path.resolve(clientRoot, relative);
-  if (candidate !== clientRoot && !candidate.startsWith(`${clientRoot}${path.sep}`)) return null;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-    const indexFile = path.join(candidate, 'index.html');
-    if (fs.existsSync(indexFile)) return indexFile;
+  if (relative.split('/').some((segment) => segment === '.' || segment === '..')) return null;
+  if (relative.endsWith('/')) {
+    return staticFiles.get(`${relative}index.html`) || indexFile;
   }
-  return path.join(clientRoot, 'index.html');
+  return staticFiles.get(relative) || indexFile;
 }
 
 const server = http.createServer((request, response) => {
