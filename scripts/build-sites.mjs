@@ -103,7 +103,15 @@ function renderInline(raw) {
     const cleanHref = href.trim();
     const docId = cleanHref.toLocaleLowerCase().includes('.md') ? docIdFromHref(cleanHref) : null;
     if (docId) return reserve(`<a href="?doc=${encodeURIComponent(docId)}" data-doc-link="${escapeHtml(docId)}">${escapeHtml(label)}</a>`);
-    const safeHref = /^(https?:|mailto:)/i.test(cleanHref) ? cleanHref : cleanHref.replace(/^\.\//, './');
+    const hasAllowedScheme = /^(https?:|mailto:)/i.test(cleanHref);
+    const hasOtherScheme = /^[a-z][a-z0-9+.-]*:/i.test(cleanHref);
+    const safeHref = hasAllowedScheme
+      ? cleanHref
+      : hasOtherScheme
+        ? '#'
+        : cleanHref.startsWith('/') || cleanHref.startsWith('./') || cleanHref.startsWith('../') || cleanHref.startsWith('#')
+          ? cleanHref
+          : `./${cleanHref}`;
     const external = /^https?:/i.test(cleanHref) ? ' target="_blank" rel="noreferrer"' : '';
     return reserve(`<a href="${escapeHtml(safeHref)}"${external}>${escapeHtml(label)}</a>`);
   });
@@ -116,7 +124,7 @@ function renderInline(raw) {
 
 function slugify(text, index) {
   const slug = String(text).toLocaleLowerCase('ja-JP')
-    .replace(/<[^>]+>/g, '')
+    .normalize('NFKC')
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '');
   return slug || `section-${index}`;

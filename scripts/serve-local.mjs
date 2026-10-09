@@ -27,6 +27,42 @@ if (!fs.existsSync(path.join(clientRoot, 'index.html'))) {
   process.exit(1);
 }
 
+function buildAssetIndex(root) {
+  const assets = new Map();
+
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+
+      const relative = path.relative(root, fullPath).split(path.sep).join('/');
+      const route = `/${relative}`;
+      const asset = {
+        filePath: fullPath,
+        contentType: contentTypes.get(path.extname(entry.name).toLowerCase()) || 'application/octet-stream',
+      };
+      assets.set(route, asset);
+
+      if (entry.name === 'index.html') {
+        const directoryRoute = path.posix.dirname(route);
+        const cleanDirectoryRoute = directoryRoute === '/' ? '/' : directoryRoute.replace(/\/$/, '');
+        assets.set(cleanDirectoryRoute, asset);
+        if (cleanDirectoryRoute !== '/') assets.set(`${cleanDirectoryRoute}/`, asset);
+      }
+    }
+  }
+
+  visit(root);
+  return assets;
+}
+
+const assetIndex = buildAssetIndex(clientRoot);
+const rootAsset = assetIndex.get('/');
+
 let idleTimer;
 function refreshIdleTimer(server) {
   clearTimeout(idleTimer);
@@ -34,40 +70,40 @@ function refreshIdleTimer(server) {
   idleTimer.unref?.();
 }
 
-function resolveRequestPath(urlPath) {
+function normalizeRequestRoute(urlPath) {
   let decoded;
   try {
-    decoded = decodeURIComponent(urlPath.split('?')[0]);
+    decoded = decodeURIComponent(String(urlPath || '/').split('?')[0]);
   } catch {
     return null;
   }
-  const relative = decoded.replace(/^\/+/, '') || 'index.html';
-  const candidate = path.resolve(clientRoot, relative);
-  if (candidate !== clientRoot && !candidate.startsWith(`${clientRoot}${path.sep}`)) return null;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
-  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-    const indexFile = path.join(candidate, 'index.html');
-    if (fs.existsSync(indexFile)) return indexFile;
-  }
-  return path.join(clientRoot, 'index.html');
+  if (decoded.includes('\0') || decoded.includes('\\')) return null;
+  const normalized = path.posix.normalize(`/${decoded.replace(/^\/+/, '')}`);
+  return normalized.startsWith('/') ? normalized : null;
+}
+
+function resolveRequestAsset(urlPath) {
+  const route = normalizeRequestRoute(urlPath);
+  if (!route) return null;
+  return assetIndex.get(route) || assetIndex.get(`${route}/`) || rootAsset || null;
 }
 
 const server = http.createServer((request, response) => {
   refreshIdleTimer(server);
-  const file = resolveRequestPath(request.url || '/');
-  if (!file) {
+  const asset = resolveRequestAsset(request.url || '/');
+  if (!asset) {
     response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
     response.end('Bad request');
     return;
   }
-  fs.readFile(file, (error, data) => {
+  fs.readFile(asset.filePath, (error, data) => {
     if (error) {
       response.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
       response.end('Could not read file');
       return;
     }
     response.writeHead(200, {
-      'content-type': contentTypes.get(path.extname(file).toLowerCase()) || 'application/octet-stream',
+      'content-type': asset.contentType,
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff',
     });
