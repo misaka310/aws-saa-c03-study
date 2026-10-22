@@ -103,7 +103,12 @@ function renderInline(raw) {
     const cleanHref = href.trim();
     const docId = cleanHref.toLocaleLowerCase().includes('.md') ? docIdFromHref(cleanHref) : null;
     if (docId) return reserve(`<a href="?doc=${encodeURIComponent(docId)}" data-doc-link="${escapeHtml(docId)}">${escapeHtml(label)}</a>`);
-    const safeHref = /^(https?:|mailto:)/i.test(cleanHref) ? cleanHref : `./${cleanHref.replace(/^\.\/+/, '')}`;
+    const permittedScheme = /^(https?:|mailto:)/i.test(cleanHref);
+    const otherScheme = /^[a-z][a-z0-9+.-]*:/i.test(cleanHref);
+    const networkPath = /^[\\/]{2}/.test(cleanHref);
+    const safeHref = (otherScheme && !permittedScheme) || networkPath
+      ? '#'
+      : permittedScheme ? cleanHref : `./${cleanHref.replace(/^\.\/+/, '')}`;
     const external = /^https?:/i.test(cleanHref) ? ' target="_blank" rel="noreferrer"' : '';
     return reserve(`<a href="${escapeHtml(safeHref)}"${external}>${escapeHtml(label)}</a>`);
   });
