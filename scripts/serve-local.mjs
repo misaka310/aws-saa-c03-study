@@ -22,30 +22,10 @@ const contentTypes = new Map([
   ['.svg', 'image/svg+xml'],
 ]);
 
-const indexFile = path.join(clientRoot, 'index.html');
-if (!fs.existsSync(indexFile)) {
+if (!fs.existsSync(path.join(clientRoot, 'index.html'))) {
   console.error('dist/client/index.html is missing. Run node scripts/build-sites.mjs first.');
   process.exit(1);
 }
-
-function buildStaticFileMap(root) {
-  const files = new Map();
-  const visit = (directory, relativeDirectory = '') => {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const absolute = path.join(directory, entry.name);
-      const relative = relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) {
-        visit(absolute, relative);
-      } else if (entry.isFile()) {
-        files.set(relative, absolute);
-      }
-    }
-  };
-  visit(root);
-  return files;
-}
-
-const staticFiles = buildStaticFileMap(clientRoot);
 
 let idleTimer;
 function refreshIdleTimer(server) {
@@ -54,6 +34,28 @@ function refreshIdleTimer(server) {
   idleTimer.unref?.();
 }
 
+function buildClientFileIndex(root) {
+  const files = new Map();
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const relative = path.relative(root, fullPath).split(path.sep).join('/');
+      files.set(`/${relative}`, fullPath);
+    }
+  };
+  visit(root);
+  const index = files.get('/index.html');
+  if (index) files.set('/', index);
+  return files;
+}
+
+const clientFiles = buildClientFileIndex(clientRoot);
+
 function resolveRequestPath(urlPath) {
   let decoded;
   try {
@@ -61,13 +63,12 @@ function resolveRequestPath(urlPath) {
   } catch {
     return null;
   }
-  if (decoded.includes('\0') || decoded.includes('\\')) return null;
-  const relative = decoded.replace(/^\/+/, '') || 'index.html';
-  if (relative.split('/').some((segment) => segment === '.' || segment === '..')) return null;
-  if (relative.endsWith('/')) {
-    return staticFiles.get(`${relative}index.html`) || indexFile;
-  }
-  return staticFiles.get(relative) || indexFile;
+  const key = `/${decoded.replace(/^\/+/, '').replace(/\/+/g, '/')}`;
+  const direct = clientFiles.get(key === '/' ? '/' : key);
+  if (direct) return direct;
+  const directoryIndex = clientFiles.get(`${key.replace(/\/+$/, '')}/index.html`);
+  if (directoryIndex) return directoryIndex;
+  return clientFiles.get('/') || null;
 }
 
 const server = http.createServer((request, response) => {
